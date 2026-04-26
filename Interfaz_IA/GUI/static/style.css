@@ -1,0 +1,90 @@
+:root {
+    --bg-dark: #131314;
+    --bg-sidebar: #1e1f20;
+    --accent: #8ab4f8;
+    --text-main: #e3e3e3;
+    --text-dim: #c4c7c5;
+    --border: #444746;
+    --wall: #4a4a4a;
+    --goal: #34a853;
+}
+
+body { margin: 0; background: var(--bg-dark); color: var(--text-main); font-family: 'Segoe UI', sans-serif; display: flex; overflow-x: hidden; }
+
+/* MENÚ HAMBURGUESA FIJO */
+.menu-toggle {
+    display: block; position: fixed; top: 15px; left: 15px; z-index: 1000;
+    background: transparent; border: none; cursor: pointer; padding: 5px;
+    border-radius: 50%; transition: background 0.3s;
+}
+.menu-toggle:hover { background: rgba(255,255,255,0.1); }
+
+/* SIDEBAR COLAPSABLE GEMINI STYLE */
+.sidebar {
+    width: 280px; height: 100vh; background: var(--bg-sidebar); position: fixed; left: 0; top: 0;
+    display: flex; flex-direction: column; padding: 70px 1rem 2rem 1rem; border-right: 1px solid var(--border);
+    transition: transform 0.3s ease; z-index: 900;
+}
+.sidebar.collapsed { transform: translateX(-100%); }
+
+.sidebar-header { font-size: 1.3rem; margin-bottom: 2rem; padding-left: 1rem; font-weight: 500; color: var(--accent); }
+.nav-links { display: flex; flex-direction: column; gap: 8px; }
+
+.nav-btn {
+    background: transparent; border: none; color: var(--text-main); text-align: left;
+    padding: 12px 1rem; border-radius: 25px; cursor: pointer; transition: 0.2s; font-size: 0.95rem;
+}
+.nav-btn.active { background: #333537; color: var(--accent); }
+.nav-btn:hover:not(.active) { background: #2b2c2e; }
+
+/* CONTENEDOR PRINCIPAL DINÁMICO */
+.main-container {
+    flex: 1; padding: 2rem 3rem; margin-left: 280px; transition: margin-left 0.3s ease; min-height: 100vh;
+}
+.main-container.expanded { margin-left: 0; }
+
+.view { display: none; }
+.view.active { display: block; animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+h1 { font-size: 2rem; font-weight: 400; margin-bottom: 2rem; }
+
+/* LAYOUT */
+.grid-layout { display: grid; grid-template-columns: 300px 1fr; gap: 2rem; }
+.panel { background: var(--bg-sidebar); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); }
+
+/* FORMULARIO */
+.input-group { margin-bottom: 1.5rem; }
+.input-group label { display: block; color: var(--text-dim); margin-bottom: 8px; font-size: 0.9rem; }
+.input-group input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; box-sizing: border-box;}
+
+.btn-gemini { width: 100%; background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: filter 0.2s; }
+.btn-gemini:hover { filter: brightness(1.1); }
+.btn-gemini.secondary { background: transparent; border: 1px solid var(--border); color: var(--text-main); margin-top: 10px; }
+.btn-gemini.secondary.active { background: #333537; color: var(--accent); border-color: var(--accent); }
+
+/* GRID DEL MAPA (TURTLEBOT STYLE) */
+.q-grid { display: grid; gap: 4px; background: #000; padding: 8px; border-radius: 12px; }
+
+.cell {
+    aspect-ratio: 1; background: #1e1f20; border-radius: 4px; display: flex; align-items: center;
+    justify-content: center; font-size: 0.7rem; color: var(--text-dim); position: relative;
+}
+
+/* Tipos de celda */
+.cell.muro { background: var(--wall); }
+.cell.meta { background: var(--goal); }
+.cell.robot {
+    background: rgba(138, 180, 248, 0.2); border: 2px solid var(--accent);
+    box-shadow: 0 0 10px rgba(138, 180, 248, 0.4); border-radius: 50%; /* Robot en circulo */
+    transform: scale(0.8);
+}
+.cell.robot::after { content: "🤖"; font-size: 1.2rem; }
+
+/* RESPONSIVO MÓVIL */
+@media (max-width: 850px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.collapsed { transform: translateX(0); } /* Invierte comportamiento */
+    .main-container { margin-left: 0; padding-top: 4rem; }
+    .grid-layout { grid-template-columns: 1fr; }
+}

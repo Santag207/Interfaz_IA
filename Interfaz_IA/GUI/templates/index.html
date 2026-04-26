@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q-Learning Lab - Pro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Estilos específicos para la tabla detallada de valores Q (Panel Derecho) */
+        .q-detail-cell {
+            position: relative;
+            aspect-ratio: 1;
+            background: #1e1f20;
+            border: 1px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.55rem;
+            color: #8ab4f8;
+        }
+        .q-val { position: absolute; pointer-events: none; }
+        .q-up { top: 2px; }
+        .q-down { bottom: 2px; }
+        .q-left { left: 2px; }
+        .q-right { right: 2px; }
+        .q-center {
+            font-weight: bold;
+            color: white;
+            background: rgba(138, 180, 248, 0.2);
+            border-radius: 4px;
+            padding: 1px 3px;
+            font-size: 0.7rem;
+        }
+
+        .grid-layout-triple {
+            display: grid;
+            grid-template-columns: 280px 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        /* Notificación Flotante (Toast) */
+        #toast {
+            position: fixed; top: 20px; right: 20px; background: #8ab4f8; color: #000;
+            padding: 15px 25px; border-radius: 10px; display: none; z-index: 1000;
+            font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 1200px) {
+            .grid-layout-triple { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="toast">¡Configuración Aplicada! Redirigiendo...</div>
+
+    <button class="menu-toggle" onclick="toggleMenu()">
+        <svg viewBox="0 0 24 24" fill="white" width="24px" height="24px"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+    </button>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">Turtlebot IA</div>
+        <div class="nav-links">
+            <button class="nav-btn active" id="nav-diseno" onclick="navegar('diseno', this)">1. Configuración</button>
+            <button class="nav-btn" id="nav-aprendizaje" onclick="navegar('aprendizaje', this)">2. Entrenamiento</button>
+            <button class="nav-btn" id="nav-uso" onclick="navegar('uso', this)">3. Simulación</button>
+        </div>
+    </nav>
+
+    <main class="main-container" id="main-content">
+
+        <section id="diseno" class="view active">
+            <div class="header">
+                <h1>Configuración del Agente</h1>
+                <p>Configura el entorno, las recompensas y los parámetros del cerebro de la IA.</p>
+            </div>
+            <div class="grid-layout">
+                <div class="panel settings-panel">
+                    <h3>Dimensiones del Mapa</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="input-group">
+                            <label>Filas</label>
+                            <input type="number" id="dim-f" value="10" onchange="cambiarDimensiones()">
+                        </div>
+                        <div class="input-group">
+                            <label>Columnas</label>
+                            <input type="number" id="dim-c" value="10" onchange="cambiarDimensiones()">
+                        </div>
+                    </div>
+                    <hr style="border: 0.5px solid #444; margin: 15px 0;">
+                    <h3>Hiperparámetros</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="input-group"><label>Alpha (LR)</label><input type="number" id="alpha" value="0.1" step="0.01"></div>
+                        <div class="input-group"><label>Gamma (Disc)</label><input type="number" id="gamma" value="0.9" step="0.01"></div>
+                        <div class="input-group"><label>Epsilon</label><input type="number" id="epsilon" value="0.1" step="0.01"></div>
+                        <div class="input-group"><label>Épocas</label><input type="number" id="epocas" value="1000"></div>
+                    </div>
+                    <hr style="border: 0.5px solid #444; margin: 15px 0;">
+                    <h3>Recompensas</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="input-group"><label>Meta (+)</label><input type="number" id="r-meta" value="100"></div>
+                        <div class="input-group"><label>Muro (-)</label><input type="number" id="r-muro" value="-10"></div>
+                        <div class="input-group"><label>Paso (-)</label><input type="number" id="r-paso" value="-1"></div>
+                    </div>
+                    <button class="btn-gemini secondary" onclick="generarAleatorio()">Mapa Aleatorio Válido</button>
+                    <button class="btn-gemini" style="margin-top:10px" onclick="confirmarYPasar()">Confirmar y Entrenar</button>
+                    <button class="btn-gemini secondary" style="margin-top:10px" onclick="limpiarMapa()">Limpiar Todo</button>
+                </div>
+                <div class="panel map-panel">
+                    <div id="grid-diseno" class="q-grid clickable"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="aprendizaje" class="view">
+            <div class="header">
+                <h1>Entrenamiento Visual</h1>
+                <p>Observa el mapa dinámico y el detalle de los valores Q por dirección.</p>
+            </div>
+            <div class="grid-layout-triple">
+                <div class="panel settings-panel">
+                    <h3>Control</h3>
+                    <div class="input-group">
+                        <label>Velocidad (Delay ms)</label>
+                        <input type="range" id="speed-slider" min="10" max="1000" value="200" oninput="actualizarLabelVelocidad(this.value)">
+                        <span id="speed-label" style="font-size: 0.8rem; color: #8ab4f8;">200ms</span>
+                    </div>
+                    <button class="btn-gemini" id="btn-v-train" onclick="toggleEntrenamientoVisual()">Iniciar Observación</button>
+                    <button class="btn-gemini secondary" id="btn-v-skip" onclick="entrenarRapido()">Entrenamiento Rápido (Skip)</button>
+                    <button class="btn-gemini hidden" id="btn-ir-simular" style="background:#4caf50; color:white;" onclick="navegar('uso', document.getElementById('nav-uso'))">¡Entrenamiento Listo! Ir a Simular</button>
+                </div>
+
+                <div class="panel">
+                    <h4>Mapa Real (Calor Dinámico)</h4>
+                    <div id="grid-train" class="q-grid"></div>
+                </div>
+
+                <div class="panel">
+                    <h4>Valores Q Detallados (Direcciones)</h4>
+                    <div id="grid-train-detail" class="q-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="uso" class="view">
+            <div class="header">
+                <h1>Simulador (Explotación)</h1>
+                <p>El agente utiliza el conocimiento óptimo adquirido.</p>
+            </div>
+            <div class="panel-uso">
+                <div class="controls">
+                    <button class="btn-gemini" onclick="pedirPaso()">Dar un Paso</button>
+                    <button class="btn-gemini secondary" onclick="toggleAutoPlay()" id="btn-auto">Auto-Play</button>
+                    <button class="btn-gemini" style="background:#f44336; color:white; margin-left: 10px;" onclick="reiniciarTodoElProceso()">Nuevo Escenario</button>
+                </div>
+                <div id="grid-uso" class="q-grid" style="margin-top: 20px;"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let autoPlayInterval = null;
+        let entrenandoVisualmente = false;
+        let filas = 10;
+        let columnas = 10;
+        let mapaLocal = Array(10).fill().map(() => Array(10).fill(0));
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg; t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 2500);
+        }
+
+        function getColorForQ(val, min, max) {
+            if (val === 0) return 'transparent';
+            const ratio = (val - min) / (max - min || 1);
+            const r = Math.floor(255 * (1 - ratio));
+            const g = Math.floor(255 * ratio);
+            return `rgba(${r}, ${g}, 50, 0.5)`;
+        }
+
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('main-content').classList.toggle('expanded');
+        }
+
+        function navegar(id, btn) {
+            detenerTodo();
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+            renderizar();
+            if(id === 'diseno') dibujarMapaDiseno();
+        }
+
+        function detenerTodo() {
+            entrenandoVisualmente = false;
+            clearInterval(autoPlayInterval);
+            autoPlayInterval = null;
+            document.getElementById('btn-auto').innerText = "Auto-Play";
+            document.getElementById('btn-v-train').innerText = "Iniciar Observación";
+        }
+
+        function cambiarDimensiones() {
+            filas = parseInt(document.getElementById('dim-f').value);
+            columnas = parseInt(document.getElementById('dim-c').value);
+            mapaLocal = Array(filas).fill().map(() => Array(columnas).fill(0));
+            dibujarMapaDiseno();
+        }
+
+        async function confirmarYPasar() {
+            const data = {
+                alpha: document.getElementById('alpha').value,
+                gamma: document.getElementById('gamma').value,
+                epsilon: document.getElementById('epsilon').value,
+                epocas: document.getElementById('epocas').value,
+                r_meta: document.getElementById('r-meta').value,
+                r_muro: document.getElementById('r-muro').value,
+                r_paso: document.getElementById('r-paso').value,
+                mapa: mapaLocal,
+                filas: filas,
+                columnas: columnas
+            };
+            await fetch('/api/actualizar_todo', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            showToast("¡Configuración guardada!");
+            document.getElementById('btn-v-train').classList.remove('hidden');
+            document.getElementById('btn-v-skip').classList.remove('hidden');
+            document.getElementById('btn-ir-simular').classList.add('hidden');
+
+            showToast("Configuración cargada. ¡A entrenar!");
+            setTimeout(() => navegar('aprendizaje', document.getElementById('nav-aprendizaje')), 1000);
+        }
+
+        async function generarAleatorio() {
+            // 1. Obtener lo que el usuario escribió en los inputs
+            const f = document.getElementById('dim-f').value;
+            const c = document.getElementById('dim-c').value;
+
+            // 2. Enviar esos datos al servidor
+            const res = await fetch('/api/generar_aleatorio', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ filas: f, columnas: c })
+            });
+
+            const data = await res.json();
+
+            // 3. ACTUALIZACIÓN CRÍTICA: Sincronizar dimensiones locales con las del servidor
+            filas = data.dimensiones.f;
+            columnas = data.dimensiones.c;
+
+            // 4. Reconstruir el mapa local para que coincida con el nuevo tamaño
+            mapaLocal = Array(filas).fill().map(() => Array(columnas).fill(0));
+            data.mapa.forEach(celda => {
+                if(celda.tipo === "muro") mapaLocal[celda.x][celda.y] = 1;
+            });
+
+            // 5. Dibujar
+            dibujarMapaDiseno();
+            showToast(`Mapa aleatorio de ${filas}x${columnas} generado`);
+        }
+
+        function dibujarMapaDiseno() {
+            const container = document.getElementById('grid-diseno');
+            container.style.gridTemplateColumns = `repeat(${columnas}, 1fr)`;
+            container.innerHTML = '';
+            for(let f=0; f<filas; f++) {
+                for(let c=0; c<columnas; c++) {
+                    const div = document.createElement('div');
+                    div.className = `cell ${mapaLocal[f][c] === 1 ? 'muro' : ''}`;
+                    if(f===0 && c===0) div.classList.add('robot');
+                    if(f===filas-1 && c===columnas-1) div.classList.add('meta');
+                    div.onclick = () => {
+                        if((f===0 && c===0) || (f===filas-1 && c===columnas-1)) return;
+                        mapaLocal[f][c] = mapaLocal[f][c] === 1 ? 0 : 1;
+                        div.classList.toggle('muro');
+                    };
+                    container.appendChild(div);
+                }
+            }
+        }
+
+        function limpiarMapa() {
+            mapaLocal = Array(filas).fill().map(() => Array(columnas).fill(0));
+            dibujarMapaDiseno();
+        }
+
+        function actualizarLabelVelocidad(val) {
+            document.getElementById('speed-label').innerText = `${val}ms`;
+        }
+
+        function toggleEntrenamientoVisual() {
+            entrenandoVisualmente = !entrenandoVisualmente;
+            const btn = document.getElementById('btn-v-train');
+            btn.innerText = entrenandoVisualmente ? "Detener" : "Iniciar Observación";
+            if(entrenandoVisualmente) loopEntrenamiento();
+        }
+
+        async function loopEntrenamiento() {
+            if(!entrenandoVisualmente) return;
+            const res = await fetch('/api/paso_visual', { method: 'POST' });
+            const data = await res.json();
+            dibujarMapaRealCalor('grid-train', data);
+            dibujarMapaDetallado('grid-train-detail', data);
+            setTimeout(loopEntrenamiento, document.getElementById('speed-slider').value);
+        }
+
+        async function entrenarRapido() {
+            showToast("Entrenando a máxima velocidad...");
+
+            // Enviamos el estado actual del mapa y dimensiones para evitar el IndexError
+            const payload = {
+                filas: filas,
+                columnas: columnas,
+                mapa: mapaLocal
+            };
+
+            const res = await fetch('/api/entrenar_fast', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                // Ocultamos controles de entrenamiento visual
+                document.getElementById('btn-v-train').classList.add('hidden');
+                document.getElementById('btn-v-skip').classList.add('hidden');
+
+                // Renderizamos el resultado final (Valores Q calculados)
+                await renderizar();
+
+                // Mostramos el botón de simulación
+                document.getElementById('btn-ir-simular').classList.remove('hidden');
+                showToast("¡Entrenamiento Completo!");
+            }
+        }
+
+        async function renderizar() {
+            try {
+                const res = await fetch('/api/estado');
+                const data = await res.json();
+
+                if (!data || !data.dimensiones) return;
+
+                // Sincronizar variables globales inmediatamente
+                filas = data.dimensiones.f;
+                columnas = data.dimensiones.c;
+
+                // FORZAR el estilo de columnas en todos los contenedores antes de dibujar
+                const grids = ['grid-train', 'grid-uso', 'grid-train-detail'];
+                grids.forEach(id => {
+                    const container = document.getElementById(id);
+                    if (container) {
+                        container.style.gridTemplateColumns = `repeat(${columnas}, 1fr)`;
+                        container.style.width = "100%"; // Evita que se desborde
+                        container.style.maxWidth = "600px"; // O el tamaño máximo que prefieras
+                    }
+                });
+
+                // Lógica del botón de simulación
+                const btnIrSimular = document.getElementById('btn-ir-simular');
+                if (btnIrSimular && data.mapa) {
+                    const tieneConocimiento = data.mapa.some(c => c.q_max && Math.abs(c.q_max) > 0.0001);
+                    if (tieneConocimiento) {
+                        btnIrSimular.classList.remove('hidden');
+                    }
+                }
+
+                // Dibujar contenido
+                dibujarMapaRealCalor('grid-train', data);
+                dibujarMapaRealCalor('grid-uso', data);
+                dibujarMapaDetallado('grid-train-detail', data);
+
+            } catch (error) {
+                console.error("Error en renderizado dinámico:", error);
+            }
+        }
+
+        // PANEL IZQUIERDO: Mapa Real con Calor dinámico y obstáculos
+        function dibujarMapaRealCalor(containerId, data) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.style.gridTemplateColumns = `repeat(${columnas}, 1fr)`;
+            container.innerHTML = '';
+
+            const allQs = data.mapa.filter(c => c.tipo === "libre").map(c => c.q_max);
+            const minQ = Math.min(...allQs);
+            const maxQ = Math.max(...allQs);
+
+            data.mapa.forEach(celda => {
+                const div = document.createElement('div');
+                div.className = `cell ${celda.tipo}`;
+                if (celda.tipo === "libre") {
+                    div.style.backgroundColor = getColorForQ(celda.q_max, minQ, maxQ);
+                    div.innerHTML = `<span>${celda.q_max.toFixed(0)}</span>`;
+                }
+                if (data.posicion[0] === celda.x && data.posicion[1] === celda.y) div.classList.add('robot');
+                container.appendChild(div);
+            });
+        }
+
+        // PANEL DERECHO: Detalle de valores Q (Flechas/Direcciones)
+        function dibujarMapaDetallado(containerId, data) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.style.gridTemplateColumns = `repeat(${columnas}, 1fr)`;
+            container.innerHTML = '';
+
+            data.mapa.forEach(celda => {
+                const div = document.createElement('div');
+                div.className = `q-detail-cell ${celda.tipo}`;
+                if (celda.tipo === "libre" && celda.q_values) {
+                    div.innerHTML = `
+                        <div class="q-val q-up">${celda.q_values.up.toFixed(0)}</div>
+                        <div class="q-val q-down">${celda.q_values.down.toFixed(0)}</div>
+                        <div class="q-val q-left">${celda.q_values.left.toFixed(0)}</div>
+                        <div class="q-val q-right">${celda.q_values.right.toFixed(0)}</div>
+                        <div class="q-center">${celda.q_max.toFixed(0)}</div>
+                    `;
+                }
+                if (data.posicion[0] === celda.x && data.posicion[1] === celda.y) div.classList.add('robot');
+                container.appendChild(div);
+            });
+        }
+
+        async function pedirPaso() {
+            await fetch('/api/paso_uso', { method: 'POST' });
+            renderizar();
+        }
+
+        function toggleAutoPlay() {
+            const btn = document.getElementById('btn-auto');
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+                btn.innerText = "Auto-Play";
+            } else {
+                autoPlayInterval = setInterval(pedirPaso, 300);
+                btn.innerText = "Detener Auto-Play";
+            }
+        }
+
+        async function reiniciarTodoElProceso() {
+            if (!confirm("¿Estás seguro de que quieres borrar el entrenamiento actual y crear un nuevo mapa?")) return;
+
+            detenerTodo(); // Detiene Auto-Play o entrenamiento visual si están activos
+
+            // 1. Avisar al servidor que limpie la Matriz Q y resetee el agente
+            // Usaremos la ruta /api/redimensionar que ya tienes, pues esta reinicia la MatrizQ
+            await fetch('/api/redimensionar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ filas: filas, columnas: columnas })
+            });
+
+            // 2. Resetear variables locales
+            mapaLocal = Array(filas).fill().map(() => Array(columnas).fill(0));
+
+            // 3. Resetear botones de la pestaña de entrenamiento
+            document.getElementById('btn-v-train').classList.remove('hidden');
+            document.getElementById('btn-v-skip').classList.remove('hidden');
+            document.getElementById('btn-ir-simular').classList.add('hidden');
+
+            // 4. Volver a la pestaña 1
+            showToast("Sistema reiniciado. Configura tu nuevo mapa.");
+            navegar('diseno', document.getElementById('nav-diseno'));
+        }
+
+        window.onload = () => { dibujarMapaDiseno(); renderizar(); };
+    </script>
+</body>
+</html>
