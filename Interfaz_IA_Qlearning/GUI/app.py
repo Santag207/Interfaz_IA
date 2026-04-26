@@ -45,15 +45,9 @@ class ManejadorInterfazWeb:
             datos = request.json
             f = int(datos.get('filas', 10))
             c = int(datos.get('columnas', 10))
-
-            # 1. Forzar al coordinador a crear un mapa vacío del nuevo tamaño
-            # Esto evita que el generador aleatorio use dimensiones viejas (como el 10x10)
             matriz_vacia = [[0 for _ in range(c)] for _ in range(f)]
             self.coordinador.sincronizar_mapa(matriz_vacia, f, c)
-
-            # 2. Ahora sí, generar los muros aleatorios sobre el mapa de tamaño (f x c)
             self.coordinador.generar_mapa_valido()
-
             return jsonify(self.coordinador.obtener_estado_visual())
 
         @self.app.route('/api/redimensionar', methods=['POST'])
@@ -66,35 +60,20 @@ class ManejadorInterfazWeb:
         @self.app.route('/api/actualizar_todo', methods=['POST'])
         def actualizar_todo():
             datos = request.json
-
-            # 1. Extraer dimensiones enviadas por el frontend
             f = int(datos.get('filas', 10))
             c = int(datos.get('columnas', 10))
-
-            # 2. Actualizar hiperparámetros (LR, Gamma, etc.)
             self.coordinador.config.actualizar(datos)
-
-            # 3. Sincronizar mapa PASANDO las nuevas dimensiones
-            # Nota: Debes modificar esta función en backend_qlearning.py también
             self.coordinador.sincronizar_mapa(datos.get('mapa'), f, c)
-
             return jsonify({"status": "ready"})
 
         @self.app.route('/api/entrenar_fast', methods=['POST'])
         def entrenar_fast():
-            # 1. Obtenemos las dimensiones enviadas desde el frontend para asegurar sincronía
             datos = request.json
             f = int(datos.get('filas', 10))
             c = int(datos.get('columnas', 10))
             mapa = datos.get('mapa')
-
-            # 2. Sincronizamos el mapa y las dimensiones ANTES de entrenar
-            # Esto evita que el bucle de entrenamiento use el tamaño viejo
             self.coordinador.sincronizar_mapa(mapa, f, c)
-
-            # 3. Ejecutamos el entrenamiento con las épocas configuradas
             self.coordinador.actualizar_y_entrenar({"epocas": self.coordinador.config.epocas})
-
             return jsonify({"status": "finished"})
 
     def ejecutar(self):

@@ -1,6 +1,5 @@
 import random
 
-
 class Mundo2D:
     def __init__(self, filas=10, columnas=10):
         self.filas = filas
@@ -21,29 +20,18 @@ class Mundo2D:
     def actualizar_desde_gui(self, matriz_gui, f, c):
         self.filas = f
         self.columnas = c
-        # Recrear el tablero con el nuevo tamaño para evitar el IndexError
         self.tablero = [[0 for _ in range(c)] for _ in range(f)]
 
         for fila_idx in range(f):
             for col_idx in range(c):
-                # Aquí ya no habrá IndexError porque el bucle respeta el nuevo f y c
                 self.tablero[fila_idx][col_idx] = matriz_gui[fila_idx][col_idx]
 
     def generar_mapa_aleatorio(self):
-        # 'self.filas' y 'self.columnas' deben ser las actuales
-        # Creamos el tablero nuevo
         nuevo_tablero = [[0 for _ in range(self.columnas)] for _ in range(self.filas)]
-
-        # RECALCULAR META DINÁMICAMENTE
-        # Esto asegura que si el mapa es 6x6, la meta sea (5,5) y no (9,9)
         self.meta = (self.filas - 1, self.columnas - 1)
         self.inicio = (0, 0)
-
-        # Colocar inicio y meta en el nuevo tablero
-        nuevo_tablero[self.inicio[0]][self.inicio[1]] = 0  # Opcional, ya es 0
-        nuevo_tablero[self.meta[0]][self.meta[1]] = 2  # <--- AQUÍ YA NO DARÁ ERROR
-
-        # Lógica de muros aleatorios (ejemplo 20%)
+        nuevo_tablero[self.inicio[0]][self.inicio[1]] = 0
+        nuevo_tablero[self.meta[0]][self.meta[1]] = 2
         import random
         n_muros = int((self.filas * self.columnas) * 0.2)
         muros_cont = 0
@@ -54,7 +42,6 @@ class Mundo2D:
                 if nuevo_tablero[r_f][r_c] == 0:
                     nuevo_tablero[r_f][r_c] = 1
                     muros_cont += 1
-
         self.tablero = nuevo_tablero
 
     def existe_camino(self, tablero):

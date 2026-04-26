@@ -24,14 +24,9 @@ class AgenteCoordinador:
         self.posicion_robot = self.mundo.inicio
 
     def sincronizar_mapa(self, mapa_data, f, c):
-        # Avisar al mundo que cambie de tamaño antes de procesar la matriz
         self.mundo.actualizar_desde_gui(mapa_data, f, c)
-
-        # Reiniciar la Matriz Q para el nuevo tamaño
         from Backend.matriz_q import MatrizQ
         self.matriz = MatrizQ(f, c)
-
-        # Reasignar la matriz al motor de entrenamiento
         self.motor.matriz = self.matriz
         self.posicion_agente = self.mundo.inicio
 
@@ -43,15 +38,10 @@ class AgenteCoordinador:
 
     def actualizar_y_entrenar(self, datos):
         self.config.actualizar(datos)
-
-        # Extraer dimensiones del diccionario recibido
         f = int(datos.get('filas', self.mundo.filas))
         c = int(datos.get('columnas', self.mundo.columnas))
-
-        # Forzar redimensión si hay discrepancia
         if f != self.mundo.filas or c != self.mundo.columnas:
             self.reconfigurar_entorno(f, c)
-
         epocas = int(datos.get('epocas', 1000))
         for _ in range(epocas):
             pos = self.mundo.inicio  # Siempre (0,0) del mundo actual
@@ -60,8 +50,6 @@ class AgenteCoordinador:
                 if nueva_pos == self.mundo.meta or recompensa < -50:
                     break
                 pos = nueva_pos
-
-        # CRÍTICO: Resetear la posición del robot para la visualización posterior
         self.posicion_robot = self.mundo.inicio
 
     def paso_entrenamiento_visual(self):
@@ -70,12 +58,10 @@ class AgenteCoordinador:
         accion = random.randint(0, 3) if random.uniform(0, 1) < 0.1 else self.matriz.obtener_mejor_accion(x, y)
         nx, ny = self.motor.simular_movimiento(x, y, accion)
         recompensa, done = self.mundo.obtener_recompensa_visual(nx, ny)
-
         max_futuro = self.matriz.obtener_max_q(nx, ny)
         q_actual = self.matriz.obtener_valor(x, y, accion)
         nuevo_q = q_actual + self.config.alpha * (recompensa + self.config.gamma * max_futuro - q_actual)
         self.matriz.actualizar(x, y, accion, nuevo_q)
-
         self.posicion_robot = self.mundo.inicio if done else (nx, ny)
         return self.obtener_estado_visual()
 
