@@ -1,40 +1,70 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Configuración básica del documento -->
+    <meta charset="UTF-8"> <!-- Soporte para caracteres especiales -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
     <title>Q-Learning Lab - Pro</title>
+
+    <!-- Carga de estilos desde Flask -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
+    <!-- Notificación tipo toast (mensaje flotante) -->
     <div id="toast">¡Configuración Aplicada! Redirigiendo...</div>
 
+    <!-- Botón para mostrar/ocultar menú lateral -->
     <button class="menu-toggle" onclick="toggleMenu()">
-        <svg viewBox="0 0 24 24" fill="white" width="24px" height="24px"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        <!-- Icono hamburguesa -->
+        <svg viewBox="0 0 24 24" fill="white" width="24px" height="24px">
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+        </svg>
     </button>
 
+    <!-- Barra lateral de navegación -->
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-header">Turtlebot IA</div>
+
+        <!-- Botones de navegación entre vistas -->
         <div class="nav-links">
-            <button class="nav-btn active" id="nav-diseno" onclick="navegar('diseno', this)">1. Configuración</button>
-            <button class="nav-btn" id="nav-aprendizaje" onclick="navegar('aprendizaje', this)">2. Entrenamiento</button>
-            <button class="nav-btn" id="nav-uso" onclick="navegar('uso', this)">3. Simulación</button>
+            <!-- navegar(): cambia de sección -->
+            <button class="nav-btn active" id="nav-diseno" onclick="navegar('diseno', this)">
+                1. Configuración
+            </button>
+
+            <button class="nav-btn" id="nav-aprendizaje" onclick="navegar('aprendizaje', this)">
+                2. Entrenamiento
+            </button>
+
+            <button class="nav-btn" id="nav-uso" onclick="navegar('uso', this)">
+                3. Simulación
+            </button>
         </div>
     </nav>
 
+    <!-- Contenedor principal -->
     <main class="main-container" id="main-content">
 
+        <!-- ==================== SECCIÓN 1: CONFIGURACIÓN ==================== -->
         <section id="diseno" class="view active">
             <div class="header">
                 <h1>Configuración del Agente</h1>
-                <p>Configura el entorno, las recompensas y los parámetros del cerebro de la IA.</p>
+                <p>Configura entorno, recompensas y parámetros del algoritmo Q-Learning.</p>
             </div>
+
+            <!-- Layout principal -->
             <div class="grid-layout">
+
+                <!-- Panel de configuración -->
                 <div class="panel settings-panel">
+
+                    <!-- Dimensiones del mapa -->
                     <h3>Dimensiones del Mapa</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div class="input-group">
                             <label>Filas</label>
+                            <!-- cambiarDimensiones(): actualiza el tamaño del grid -->
                             <input type="number" id="dim-f" value="10" onchange="cambiarDimensiones()">
                         </div>
                         <div class="input-group">
@@ -42,54 +72,140 @@
                             <input type="number" id="dim-c" value="10" onchange="cambiarDimensiones()">
                         </div>
                     </div>
+
                     <hr style="border: 0.5px solid #444; margin: 15px 0;">
+
+                    <!-- Hiperparámetros del Q-Learning -->
                     <h3>Hiperparámetros</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div class="input-group"><label>Alpha (LR)</label><input type="number" id="alpha" value="0.1" step="0.01"></div>
-                        <div class="input-group"><label>Gamma (Disc)</label><input type="number" id="gamma" value="0.9" step="0.01"></div>
-                        <div class="input-group"><label>Epsilon</label><input type="number" id="epsilon" value="0.1" step="0.01"></div>
-                        <div class="input-group"><label>Épocas</label><input type="number" id="epocas" value="1000"></div>
+                        <!-- Alpha: tasa de aprendizaje -->
+                        <div class="input-group">
+                            <label>Alpha (LR)</label>
+                            <input type="number" id="alpha" value="0.1" step="0.01">
+                        </div>
+
+                        <!-- Gamma: factor de descuento -->
+                        <div class="input-group">
+                            <label>Gamma (Disc)</label>
+                            <input type="number" id="gamma" value="0.9" step="0.01">
+                        </div>
+
+                        <!-- Epsilon: exploración -->
+                        <div class="input-group">
+                            <label>Epsilon</label>
+                            <input type="number" id="epsilon" value="0.1" step="0.01">
+                        </div>
+
+                        <!-- Número de iteraciones -->
+                        <div class="input-group">
+                            <label>Épocas</label>
+                            <input type="number" id="epocas" value="1000">
+                        </div>
                     </div>
+
                     <hr style="border: 0.5px solid #444; margin: 15px 0;">
+
+                    <!-- Sistema de recompensas -->
                     <h3>Recompensas</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div class="input-group"><label>Meta (+)</label><input type="number" id="r-meta" value="100"></div>
-                        <div class="input-group"><label>Muro (-)</label><input type="number" id="r-muro" value="-10"></div>
-                        <div class="input-group"><label>Paso (-)</label><input type="number" id="r-paso" value="-1"></div>
+                        <!-- Recompensa positiva -->
+                        <div class="input-group">
+                            <label>Meta (+)</label>
+                            <input type="number" id="r-meta" value="100">
+                        </div>
+
+                        <!-- Penalización por obstáculo -->
+                        <div class="input-group">
+                            <label>Muro (-)</label>
+                            <input type="number" id="r-muro" value="-10">
+                        </div>
+
+                        <!-- Penalización por movimiento -->
+                        <div class="input-group">
+                            <label>Paso (-)</label>
+                            <input type="number" id="r-paso" value="-1">
+                        </div>
                     </div>
-                    <button class="btn-gemini secondary" onclick="generarAleatorio()">Mapa Aleatorio Válido</button>
-                    <button class="btn-gemini" style="margin-top:10px" onclick="confirmarYPasar()">Confirmar y Entrenar</button>
-                    <button class="btn-gemini secondary" style="margin-top:10px" onclick="limpiarMapa()">Limpiar Todo</button>
+
+                    <!-- Botones de acción -->
+                    <!-- generarAleatorio(): crea un mapa válido random -->
+                    <button class="btn-gemini secondary" onclick="generarAleatorio()">
+                        Mapa Aleatorio Válido
+                    </button>
+
+                    <!-- confirmarYPasar(): guarda config y pasa a entrenamiento -->
+                    <button class="btn-gemini" style="margin-top:10px" onclick="confirmarYPasar()">
+                        Confirmar y Entrenar
+                    </button>
+
+                    <!-- limpiarMapa(): reinicia grid -->
+                    <button class="btn-gemini secondary" style="margin-top:10px" onclick="limpiarMapa()">
+                        Limpiar Todo
+                    </button>
                 </div>
+
+                <!-- Panel del mapa editable -->
                 <div class="panel map-panel">
+                    <!-- Grid interactivo (se llena dinámicamente con JS) -->
                     <div id="grid-diseno" class="q-grid clickable"></div>
                 </div>
             </div>
         </section>
 
+        <!-- ==================== SECCIÓN 2: ENTRENAMIENTO ==================== -->
         <section id="aprendizaje" class="view">
             <div class="header">
                 <h1>Entrenamiento Visual</h1>
-                <p>Observa el mapa dinámico y el detalle de los valores Q por dirección.</p>
+                <p>Visualización del aprendizaje del agente (Q-values).</p>
             </div>
+
             <div class="grid-layout-triple">
+
+                <!-- Panel de control -->
                 <div class="panel settings-panel">
                     <h3>Control</h3>
+
+                    <!-- Control de velocidad -->
                     <div class="input-group">
                         <label>Velocidad (Delay ms)</label>
-                        <input type="range" id="speed-slider" min="10" max="1000" value="200" oninput="actualizarLabelVelocidad(this.value)">
-                        <span id="speed-label" style="font-size: 0.8rem; color: #8ab4f8;">200ms</span>
+
+                        <!-- actualiza velocidad del entrenamiento -->
+                        <input type="range" id="speed-slider" min="10" max="1000" value="200"
+                               oninput="actualizarLabelVelocidad(this.value)">
+
+                        <!-- Label dinámico -->
+                        <span id="speed-label" style="font-size: 0.8rem; color: #8ab4f8;">
+                            200ms
+                        </span>
                     </div>
-                    <button class="btn-gemini" id="btn-v-train" onclick="toggleEntrenamientoVisual()">Iniciar Observación</button>
-                    <button class="btn-gemini secondary" id="btn-v-skip" onclick="entrenarRapido()">Entrenamiento Rápido (Skip)</button>
-                    <button class="btn-gemini hidden" id="btn-ir-simular" style="background:#4caf50; color:white;" onclick="navegar('uso', document.getElementById('nav-uso'))">¡Entrenamiento Listo! Ir a Simular</button>
+
+                    <!-- toggleEntrenamientoVisual(): inicia/pausa entrenamiento -->
+                    <button class="btn-gemini" id="btn-v-train"
+                            onclick="toggleEntrenamientoVisual()">
+                        Iniciar Observación
+                    </button>
+
+                    <!-- entrenarRapido(): entrenamiento sin animación -->
+                    <button class="btn-gemini secondary" id="btn-v-skip"
+                            onclick="entrenarRapido()">
+                        Entrenamiento Rápido (Skip)
+                    </button>
+
+                    <!-- Aparece al terminar entrenamiento -->
+                    <button class="btn-gemini hidden" id="btn-ir-simular"
+                            style="background:#4caf50; color:white;"
+                            onclick="navegar('uso', document.getElementById('nav-uso'))">
+                        ¡Entrenamiento Listo! Ir a Simular
+                    </button>
                 </div>
 
+                <!-- Mapa con calor (valores Q) -->
                 <div class="panel">
                     <h4>Mapa Real (Calor Dinámico)</h4>
                     <div id="grid-train" class="q-grid"></div>
                 </div>
 
+                <!-- Detalle de valores Q por acción -->
                 <div class="panel">
                     <h4>Valores Q Detallados (Direcciones)</h4>
                     <div id="grid-train-detail" class="q-grid"></div>
@@ -97,22 +213,44 @@
             </div>
         </section>
 
+        <!-- ==================== SECCIÓN 3: SIMULACIÓN ==================== -->
         <section id="uso" class="view">
             <div class="header">
                 <h1>Simulador (Explotación)</h1>
-                <p>El agente utiliza el conocimiento óptimo adquirido.</p>
+                <p>El agente usa la política óptima aprendida.</p>
             </div>
+
             <div class="panel-uso">
+
+                <!-- Controles del agente -->
                 <div class="controls">
-                    <button class="btn-gemini" onclick="pedirPaso()">Dar un Paso</button>
-                    <button class="btn-gemini secondary" onclick="toggleAutoPlay()" id="btn-auto">Auto-Play</button>
-                    <button class="btn-gemini" style="background:#f44336; color:white; margin-left: 10px;" onclick="reiniciarTodoElProceso()">Nuevo Escenario</button>
+
+                    <!-- pedirPaso(): ejecuta una acción -->
+                    <button class="btn-gemini" onclick="pedirPaso()">
+                        Dar un Paso
+                    </button>
+
+                    <!-- toggleAutoPlay(): ejecución automática -->
+                    <button class="btn-gemini secondary"
+                            onclick="toggleAutoPlay()" id="btn-auto">
+                        Auto-Play
+                    </button>
+
+                    <!-- reinicia todo el sistema -->
+                    <button class="btn-gemini"
+                            style="background:#f44336; color:white; margin-left: 10px;"
+                            onclick="reiniciarTodoElProceso()">
+                        Nuevo Escenario
+                    </button>
                 </div>
+
+                <!-- Grid de simulación -->
                 <div id="grid-uso" class="q-grid" style="margin-top: 20px;"></div>
             </div>
         </section>
     </main>
 
+    <!-- Script principal (lógica Q-learning y UI) -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
