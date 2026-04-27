@@ -304,3 +304,35 @@ h1 {
     }
     .grid-layout { grid-template-columns: 1fr; } /* Una sola columna */
 }
+
+/* Estilos para el botón de volver */
+.nav-divider {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 15px 0;
+    opacity: 0.5;
+}
+
+.btn-back {
+    text-decoration: none; /* Quita el subrayado del link */
+    display: flex;
+    align-items: center;
+    color: var(--text-dim) !important;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.btn-back:hover {
+    color: #ff8a8a !important; /* Un color suave rojizo para indicar salida */
+    background: rgba(255, 138, 138, 0.1) !important;
+}
+
+/* Limpieza de la clase antigua si existía */
+.panel-uso {
+    display: contents; /* Hace que el contenedor no interfiera con el grid-layout padre */
+}
+
+/* Aseguramos que los controles en simulación no se peguen */
+.settings-panel .btn-gemini {
+    margin-bottom: 10px;
+}
