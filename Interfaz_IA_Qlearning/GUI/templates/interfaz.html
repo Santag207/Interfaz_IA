@@ -6,6 +6,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
     <title>Q-Learning Lab - Pro</title>
 
+    <!-- Ventana emergente para Mapas -->
+    <div id="modal-mapas" class="modal hidden">
+        <div class="modal-content panel">
+            <div class="header" style="margin-bottom: 20px;">
+                <h2 style="margin: 0; color: var(--gemini-blue);">Gestor de Mapas</h2>
+                <p style="font-size: 0.8rem; color: var(--text-dim);">Guarda tu diseño actual o carga uno previo.</p>
+            </div>
+
+            <div id="lista-mapas" class="map-list-container">
+                <p style="color:var(--text-dim); text-align:center;">Cargando mapas...</p>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-gemini" onclick="guardarMapaActual()">
+                    💾 Guardar Diseño Actual
+                </button>
+                <button class="btn-gemini secondary" onclick="cerrarModalMapas()">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Carga de estilos desde Flask -->
     <link rel="stylesheet" href="{{ url_for('static', filename='interfaz.css') }}">
 </head>
@@ -48,6 +71,18 @@
                 </svg>
                 Volver al Inicio
             </a>
+            <!-- Dentro de <nav class="sidebar">, debajo del botón de "Volver al Inicio" -->
+            <hr class="nav-divider">
+            <div class="sidebar-header" style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 10px;">
+                Historial Reciente
+            </div>
+
+            <!-- Contenedor con Scroll Independiente -->
+            <div id="historial-scroll-container" style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
+                <div id="lista-historial-sidebar" style="display: flex; flex-direction: column; gap: 8px; padding: 0 10px;">
+                    <p style="font-size: 0.7rem; color: var(--text-dim);">Cargando...</p>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -136,6 +171,10 @@
                     </div>
 
                     <!-- Botones de acción -->
+                    <button class="btn-gemini secondary" style="margin-bottom: 10px;" onclick="abrirModalMapas()">
+                        📂 Mapas
+                    </button>
+
                     <!-- generarAleatorio(): crea un mapa válido random -->
                     <button class="btn-gemini secondary" onclick="generarAleatorio()">
                         Mapa Aleatorio Válido
@@ -150,6 +189,8 @@
                     <button class="btn-gemini secondary" style="margin-top:10px" onclick="limpiarMapa()">
                         Limpiar Todo
                     </button>
+                    <!-- Botones de acción -->
+
                 </div>
 
                 <!-- Panel del mapa editable -->
