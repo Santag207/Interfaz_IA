@@ -2,17 +2,14 @@
 Módulo coordinador del agente Q-Learning.
 Orquesta la interacción entre el mundo, matriz Q y motor de aprendizaje.
 """
-import sys
-import os
 
 # Añade carpeta Backend al path para importar módulos
 sys.path.append(os.path.dirname(__file__))
 
-from Interfaz_IA_Qlearning.GUI.Qlearning.Backend.configuracion import ConfigIA
-from Interfaz_IA_Qlearning.GUI.Qlearning.Backend.mundo import Mundo2D
-from Interfaz_IA_Qlearning.GUI.Qlearning.Backend.matriz_q import MatrizQ
-from Interfaz_IA_Qlearning.GUI.Qlearning.Backend.motor_aprendizaje import MotorQLearning
-
+from Qlearning.Backend.configuracion import ConfigIA
+from Qlearning.Backend.mundo import Mundo2D
+from Qlearning.Backend.matriz_q import MatrizQ
+from Qlearning.Backend.motor_aprendizaje import MotorQLearning
 
 class AgenteCoordinador:
     """
