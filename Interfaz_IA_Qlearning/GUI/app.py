@@ -233,5 +233,5 @@ class ManejadorInterfazWeb:
         """Inicia el servidor Flask."""
         self.app.run(debug=True, port=5000)
 
-if __name__ == '__main__':
-    ManejadorInterfazWeb().ejecutar()
+manejador = ManejadorInterfazWeb()
+app = manejador.app
