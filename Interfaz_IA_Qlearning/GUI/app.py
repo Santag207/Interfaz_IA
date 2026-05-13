@@ -10,8 +10,8 @@ from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 
 # Añade la carpeta Qlearning al path para importar módulos
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Qlearning')))
-from backend_qlearning import AgenteCoordinador
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'Qlearning')))
+from Qlearning.backend_qlearning import AgenteCoordinador
 
 
 class ManejadorInterfazWeb:

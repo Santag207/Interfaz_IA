@@ -8,10 +8,10 @@ import os
 # Añade carpeta Backend al path para importar módulos
 sys.path.append(os.path.dirname(__file__))
 
-from Backend.configuracion import ConfigIA
-from Backend.mundo import Mundo2D
-from Backend.matriz_q import MatrizQ
-from Backend.motor_aprendizaje import MotorQLearning
+from Interfaz_IA_Qlearning.GUI.Qlearning.Backend.configuracion import ConfigIA
+from Interfaz_IA_Qlearning.GUI.Qlearning.Backend.mundo import Mundo2D
+from Interfaz_IA_Qlearning.GUI.Qlearning.Backend.matriz_q import MatrizQ
+from Interfaz_IA_Qlearning.GUI.Qlearning.Backend.motor_aprendizaje import MotorQLearning
 
 
 class AgenteCoordinador:
@@ -58,7 +58,7 @@ class AgenteCoordinador:
             c (int): Columnas del mapa.
         """
         self.mundo.actualizar_desde_gui(mapa_data, f, c)  # Actualiza tablero del mundo
-        from Backend.matriz_q import MatrizQ
+        from Interfaz_IA_Qlearning.GUI.Qlearning.Backend.matriz_q import MatrizQ
         self.matriz = MatrizQ(f, c)  # Crea nueva matriz Q
         self.motor.matriz = self.matriz  # Actualiza referencia en motor
         self.posicion_agente = self.mundo.inicio  # Resetea posición
