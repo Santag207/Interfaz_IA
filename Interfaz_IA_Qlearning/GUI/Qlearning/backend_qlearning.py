@@ -55,7 +55,6 @@ class AgenteCoordinador:
             c (int): Columnas del mapa.
         """
         self.mundo.actualizar_desde_gui(mapa_data, f, c)  # Actualiza tablero del mundo
-        from Qlearning.Backend.matriz_q import MatrizQ
         self.matriz = MatrizQ(f, c)  # Crea nueva matriz Q
         self.motor.matriz = self.matriz  # Actualiza referencia en motor
         self.posicion_agente = self.mundo.inicio  # Resetea posición
